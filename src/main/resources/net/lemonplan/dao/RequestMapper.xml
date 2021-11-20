@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.lemonplan.dao.RequestMapper">
+
+    <insert id="insert" parameterType="net.lemonplan.pojo.Request">
+        INSERT INTO lp_request VALUES (#{id}, #{sendUserId}, #{acceptUserId}, #{requestTime})
+    </insert>
+
+    <delete id="deleteRequest">
+        DELETE FROM lp_request WHERE send_user_id = #{sendUserId} and accept_user_id = #{acceptUserId};
+    </delete>
+
+    <select id="queryRequest" resultType="net.lemonplan.pojo.Request">
+        SELECT * FROM lp_request WHERE send_user_id = #{sendUserId} and accept_user_id = #{acceptUserId}
+    </select>
+
+    <select id="queryByAcceptUserId" resultType="java.lang.String">
+        SELECT send_user_id FROM lp_request WHERE accept_user_id = #{userId}
+    </select>
+</mapper>

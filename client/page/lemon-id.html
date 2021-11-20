@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport"
+			content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.css" rel="stylesheet" />
+		<link href="../iconfont/iconfont.css" rel="stylesheet" />
+		<link href="../css/public.css" rel="stylesheet" />
+		<style type="text/css">
+			#icon {
+				width: 50%;
+				margin: 20px auto;
+			}
+		</style>
+	</head>
+
+	<body style="background-color: white;">
+		<header class="mui-bar mui-bar-nav title">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left title"></a>
+			<h1 class="mui-title title">柠檬号</h1>
+		</header>
+
+		<section class="lemon-content">
+			<div id="icon">
+				<img src="../picture/lemon.svg" >
+			</div>
+			<div>
+				<span>
+					柠檬号：
+				</span>
+				<span id="lemon-id">
+					孔新新
+				</span>
+				<p>
+					柠檬号是用户的唯一标识
+				</p>
+			</div>
+		</section>
+
+		<script src="../js/mui.js"></script>
+		<script src="../js/app.js"></script>
+		<script type="text/javascript">
+			mui.init()
+			mui.plusReady(function() {
+				refreshLemonID();
+			})
+			/**
+			 * 刷新用户信息
+			 */
+			function refreshLemonID() {
+				var userInfo = app.getUserInfo();
+				document.getElementById("lemon-id").innerText = userInfo.username;
+			}
+		</script>
+	</body>
+
+</html>

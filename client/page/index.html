@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport"
+			content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.css" rel="stylesheet" />
+		<link href="../iconfont/iconfont.css" rel="stylesheet" />
+		<link href="../css/public.css" rel="stylesheet" />
+		<style type="text/css">
+			.mui-bar-tab {
+				background-color: white;
+			}
+		</style>
+	</head>
+
+	<body>
+		<!-- 标题栏 -->
+		<header class="mui-bar mui-bar-nav title">
+			<h1 class="mui-title">柠檬</h1>
+		</header>
+
+		<!-- 底部选项卡 -->
+		<nav class="mui-bar mui-bar-tab">
+			<a class="mui-tab-item mui-active" tabindex="0">
+				<span class="mui-icon iconfont icon-ningmengx"></span>
+				<span class="mui-tab-label">聊天</span>
+			</a>
+			<a class="mui-tab-item" tabindex="1">
+				<span class="mui-icon iconfont icon-tongxunlu"></span>
+				<span class="mui-tab-label">通讯录</span>
+			</a>
+			<a class="mui-tab-item" tabindex="2">
+				<span class="mui-icon iconfont icon-faxian"></span>
+				<span class="mui-tab-label">发现</span>
+			</a>
+			<a class="mui-tab-item" tabindex="3">
+				<span class="mui-icon iconfont icon-wodedianji"></span>
+				<span class="mui-tab-label">我</span>
+			</a>
+		</nav>
+
+		<script src="../js/mui.js"></script>
+		<script src="../js/app.js"></script>
+		<script type="text/javascript">
+			mui.init();
+			// 定义存储选项卡页面的数组
+			var subPages = [{
+					pageId: "lemon-chatlist",
+					pageUrl: "lemon-chatlist.html"
+				},
+				{
+					pageId: "lemon-contact",
+					pageUrl: "lemon-contact.html"
+				},
+				{
+					pageId: "lemon-discover",
+					pageUrl: "lemon-discover.html"
+				},
+				{
+					pageId: "lemon-me",
+					pageUrl: "lemon-me.html"
+				}
+			]
+			// 设置打开页面样式
+			var pageStyle = {
+				height: "100%"
+			}
+			pageStyle.height = window.innerHeight - 50 + "px";
+			mui.plusReady(function() {
+				// 禁止返回到登录页面
+				mui.back = function() {
+					return false;
+				}
+				// 设置状态栏属性
+				app.setStatusBar();
+				// 添加子窗口
+				var indexWebview = plus.webview.currentWebview();
+				for (var i = 0; i < subPages.length; i++) {
+					var wv = plus.webview.create(subPages[i].pageUrl, subPages[i].pageId, pageStyle);
+					wv.hide();
+					indexWebview.append(wv);
+				}
+				plus.webview.show(subPages[0].pageId);
+				// 批量绑定显示子窗口和隐藏其余子窗口
+				mui(".mui-bar-tab").on("tap", "a", function() {
+					var tabIndex = this.getAttribute("tabindex");
+					plus.webview.show(subPages[tabIndex].pageId, "fade-in", 200);
+					for (var i = 0; i < subPages.length; i++) {
+						if (i != tabIndex) {
+							plus.webview.hide(subPages[i].pageId, "fade-in", 200);
+						}
+					}
+				})
+			})
+			/**
+			 * 设置虚拟按键颜色
+			 */
+			function setAEasyTouchColor(color) {
+				var main = plus.android.runtimeMainActivity();
+				var windowMe = main.getWindow();
+				plus.android.importClass(windowMe);
+				var Color = plus.android.importClass("android.graphics.Color");
+				plus.android.invoke(windowMe, "setNavigationBarColor", Color.parseColor(color));
+			}
+		</script>
+	</body>
+
+</html>

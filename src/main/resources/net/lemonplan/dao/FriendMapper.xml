@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.lemonplan.dao.FriendMapper">
+    <insert id="insertFriendRelation" parameterType="net.lemonplan.pojo.Friend">
+        INSERT INTO lp_friends VALUES (#{id}, #{userId}, #{friendId})
+    </insert>
+
+    <delete id="deleteFriendRelation" parameterType="net.lemonplan.pojo.Friend">
+        DELETE FROM lp_friends WHERE user_id = #{userId} and friend_id = #{friendId}
+    </delete>
+
+    <select id="queryAllByUserId" resultType="java.lang.String" parameterType="string">
+        SELECT friend_id FROM lp_friends WHERE user_id = #{userId};
+    </select>
+
+    <select id="queryOneByUserIdAndFriendId" resultType="java.lang.String">
+        SELECT friend_id FROM lp_friends WHERE user_id = #{userId} and friend_id = #{friendId}
+    </select>
+</mapper>

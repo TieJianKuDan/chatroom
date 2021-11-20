@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.css" rel="stylesheet" />
+		<link href="../iconfont/iconfont.css" rel="stylesheet" />
+		<link href="../css/public.css" rel="stylesheet" />
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav title">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left title"></a>
+			<a id="search" class="mui-icon iconfont icon-sousuo mui-pull-right title"></a>
+			<h1 class="mui-title title">搜索用户</h1>
+		</header>
+		
+		<section class="mui-content">
+			<form class="mui-input-group">
+				<div class="mui-input-row">
+					<input type="text" class="mui-input-clear mui-input-speech" placeholder="请输入用户名" id="username">
+				</div>
+			</form>
+		</section>
+		<script src="../js/mui.js"></script>
+		<script src="../js/app.js"></script>
+		<script type="text/javascript">
+			mui.init();
+			mui.plusReady(function () {
+			    document.getElementById("search").addEventListener("tap", function() {
+					var stranger = document.getElementById("username").value;
+					var userInfo = app.getUserInfo();
+					console.log(stranger);
+					if (app.isNull(stranger)) {
+						app.showToast("用户名不应为空", "error");
+						return;
+					}
+					if (!app.isUsernameLegal(stranger)) {
+						app.showToast("用户名应该只包含字母和数字", "error");
+						return;
+					}
+					if (stranger == userInfo.username) {
+						app.showToast("您不能添加您自己", "error");
+						return;
+					}
+					mui.ajax(app.serverUrl + "/user/queryUser?stranger=" + stranger + "&myId=" + userInfo.id, {
+						dataType: 'json',
+						type: "get",
+						timeout: 10000,
+						beforeSend: function() {
+							plus.nativeUI.showWaiting("查询中请稍后");
+						},
+						complete: function() {
+							plus.nativeUI.closeWaiting();
+						},
+						success: function(data) {
+							console.log("返回的数据: " + JSON.stringify(data));
+							if (data.success) {
+								if (data.info == "陌生人") {
+									mui.openWindow({
+										url: "stranger-info.html",
+										id: "stranger-info",
+										extras: {
+											strangerId: data.data.id,
+											strangerName: data.data.username,
+											faceImage: data.data.faceImage,
+											nickname: data.data.nickname,
+										}
+									})
+								} else if (data.info == "好友") {
+									mui.openWindow({
+										url: "friend-info.html",
+										id: "friend-info",
+										extras: {
+											username: data.data.username,
+											faceImage: data.data.faceImage,
+											nickname: data.data.nickname
+										}
+									})
+								}
+							} else {
+								app.showToast(data.info, "error");
+							}
+						},
+						error: app.handleError
+					})
+				})
+			})
+		</script>
+	</body>
+
+</html>

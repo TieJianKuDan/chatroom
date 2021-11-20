@@ -1,0 +1,207 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport"
+			content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.css" rel="stylesheet" />
+		<link href="../css/public.css" rel="stylesheet" />
+		<style type="text/css">
+			#face-image {
+				width: 50px;
+				height: 50px;
+				max-width: 50px;
+			}
+
+			.my-cell {
+				padding: 10px 15px 10px 15px;
+				position: relative;
+			}
+
+			dl {
+				margin: 0;
+				width: 50%;
+			}
+
+			dd {
+				margin: 0;
+			}
+
+			.choice-button {
+				position: absolute;
+				right: 15px;
+				top: 20px;
+				line-height: 20px;
+			}
+
+			.choice-button>button {
+				width: 50px;
+				height: 30px;
+				padding: 5px;
+				margin-left: 5px;
+				background-color: #f0ad4e;
+				color: white;
+				border: none;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav title">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left title"></a>
+			<h1 class="mui-title title">好友申请</h1>
+		</header>
+		<section class="mui-content">
+			<ul class="mui-table-view">
+				<!-- <li class="mui-table-view-cell mui-media my-cell">
+					<a href="javascript:;">
+						<img id="face-image" class="mui-media-object mui-pull-left" src="../picture/lemon.svg">
+						<div class="mui-media-body">
+							<dl>
+								<dt>
+									<h4 id="用户名">tiejiankudan</h4>
+								</dt>
+								<dd>
+									<p>
+										<span>昵称：</span>
+										<span id="nickname">铁剑库丹</span>
+									</p>
+								</dd>
+							</dl>
+						</div>
+						<div class="choice-button">
+							<button type="button" style="background-color: gray;">拒绝</button>
+							<button type="button">同意</button>
+						</div>
+					</a>
+				</li> -->
+			</ul>
+		</section>
+		<script src="../js/mui.js"></script>
+		<script src="../js/app.js"></script>
+		<script type="text/javascript">
+			mui.init({
+				beforeback: function() {
+					//获得父页面的webview
+					var wv = plus.webview.currentWebview().opener();
+					var id = app.getUserInfo().id;
+					wv.evalJS("refreshRequest('" + id + "')");
+					//返回true,继续页面关闭逻辑
+					return true;
+				}
+			});
+			var userInfo = null;
+			var friendId = null;
+			mui.plusReady(function() {
+				userInfo = app.getUserInfo();
+				var ws = plus.webview.currentWebview();
+				var friendRequest = ws.friendRequest;
+				var requestHtml = "";
+				for (var i = 0; i < friendRequest.length; i++) {
+					requestHtml += '<li class="mui-table-view-cell mui-media my-cell"><a href="javascript:;">' +
+						'<img id="face-image" class="mui-media-object mui-pull-left" src="' +
+						app.imgServerUrl + '/' + friendRequest[i].faceImage + '">' +
+						'<div class="mui-media-body">' +
+						'<dl><dt>' +
+						'<h4 id="用户名">' + friendRequest[i].username + '</h4>' +
+						'</dt><dd><p>' +
+						'<span>昵称：</span>' +
+						'<span id="nickname">' + friendRequest[i].nickname + '</span>' +
+						'</p></dd></dl></div>' +
+						'<div class="choice-button">' +
+						'<button sendUserId = "' + friendRequest[i].id +
+						'" type="button" style="background-color: gray;" class="dismiss">拒绝</button>' +
+						'<button sendUserId = "' + friendRequest[i].id +
+						'" type="button" class="agree">同意</button>' +
+						'</div></a>' +
+						'</li>'
+				}
+				document.getElementsByClassName("mui-table-view")[0].innerHTML = requestHtml;
+				var dismissBtn = document.getElementsByClassName("dismiss");
+				// 批量绑定点击事件
+				for (var i = 0; i < dismissBtn.length; i++) {
+					var sendUserId = dismissBtn[i].getAttribute("sendUserId");
+					var acceptUserId = userInfo.id;
+					dismissBtn[i].addEventListener("tap", function() {
+						this.parentNode.parentNode.parentNode.style.display = "none";
+						mui.ajax(app.serverUrl + "/user/dismissFriendRequest", {
+							data: {
+								sendUserId: sendUserId,
+								acceptUserId: acceptUserId
+							},
+							dataType: 'json',
+							type: "post",
+							timeout: 10000,
+							headers: {
+								'Content-Type': 'application/json'
+							},
+							beforeSend: function() {
+								plus.nativeUI.showWaiting("正在删除");
+							},
+							complete: function() {
+								plus.nativeUI.closeWaiting();
+							},
+							success: function(data) {
+								console.log("返回的数据: " + JSON.stringify(data));
+								if (data.success) {
+									app.showToast("已拒绝请求", "success");
+								} else {
+									app.showToast(data.info, "error");
+								}
+							},
+							error: app.handleError
+						})
+					})
+				}
+				var agreeBtn = document.getElementsByClassName("agree");
+				for (var i = 0; i < agreeBtn.length; i++) {
+					var sendUserId = agreeBtn[i].getAttribute("sendUserId");
+					var friendId = sendUserId;
+					var acceptUserId = userInfo.id;
+					agreeBtn[i].addEventListener("tap", function() {
+						this.parentNode.parentNode.parentNode.style.display = "none";
+						mui.ajax(app.serverUrl + "/user/agreeFriendRequest", {
+							data: {
+								sendUserId: sendUserId,
+								acceptUserId: acceptUserId
+							},
+							dataType: 'json',
+							type: "post",
+							timeout: 10000,
+							headers: {
+								'Content-Type': 'application/json'
+							},
+							beforeSend: function() {
+								plus.nativeUI.showWaiting("正在添加");
+							},
+							complete: function() {
+								plus.nativeUI.closeWaiting();
+							},
+							success: function(data) {
+								if (data.success) {
+									var wv = plus.webview.getWebviewById("lemon-contact");
+									wv.evalJS("getAllFriends('" + userInfo.id + "')");
+									wv = plus.webview.getWebviewById("lemon-chatlist");
+									var content = userInfo.id + ";" +
+										userInfo.username + ";" +
+										userInfo.nickname + ";" +
+										userInfo.faceImage;
+									var chatMsg = new app.ChatMsg(userInfo.id, friendId,
+										content);
+									var envelope = new app.Envelope(2, chatMsg);
+									wv.evalJS("CHAT.chat('" + JSON.stringify(envelope) + "')");
+								} else {
+									app.showToast(data.info, "error");
+								}
+							},
+							error: app.handleError
+						})
+					})
+				}
+			})
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,187 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport"
+			content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.css" rel="stylesheet" />
+		<link href="../iconfont/iconfont.css" rel="stylesheet" />
+		<link href="../css/public.css" rel="stylesheet" />
+		<style type="text/css">
+			#face-image {
+				width: 80px;
+				height: 80px;
+				max-width: 80px;
+				margin: 10px;
+				border-radius: 8px;
+			}
+
+			dl {
+				margin-left: 10px;
+			}
+
+			dd {
+				margin: 0;
+			}
+
+			.popover {
+				color: #f0ad4e;
+				background-color: white;
+			}
+
+			.mui-popup-button {
+				color: #f0ad4e;
+			}
+		</style>
+	</head>
+
+	<body>
+		<!-- 标题栏 -->
+		<header class="mui-bar mui-bar-nav title">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left title"></a>
+			<a id="menu" class="mui-icon iconfont icon-hanbaocaidan mui-pull-right title"></a>
+			<h1 class="mui-title title">好友信息</h1>
+		</header>
+
+		<!-- 主体内容 -->
+		<section class="mui-content">
+			<ul class="mui-table-view">
+				<li class="mui-table-view-cell mui-media">
+					<a href="javascript:;">
+						<img id="face-image" class="mui-media-object mui-pull-left" src="../picture/xuhua.jpg">
+						<div class="mui-media-body">
+							<dl class="mui-right">
+								<dt>
+									<h4 id="comment">孔新新</h4>
+								</dt>
+								<dd>
+									<p>
+										<span>昵称：</span>
+										<span id="nickname">铁剑库丹</span>
+									</p>
+								</dd>
+								<dd>
+									<p>
+										<span>柠檬号：</span>
+										<span id="lemon-id">tiejiankudan</span>
+									</p>
+								</dd>
+							</dl>
+						</div>
+					</a>
+				</li>
+				<li class="mui-table-view-cell mui-media font-style">
+					<a href="javascript:;">
+						<span class="mui-icon mui-icon-arrowright mui-pull-right font-style"></span>
+						<div class="mui-media-body">
+							设置备注
+						</div>
+					</a>
+				</li>
+				<li class="mui-table-view-cell mui-media font-style">
+					<a href="javascript:;">
+						<span class="mui-icon mui-icon-arrowright mui-pull-right font-style"></span>
+						<div class="mui-media-body">
+							朋友圈
+						</div>
+					</a>
+				</li>
+			</ul>
+
+			<ul class="mui-table-view font-style" style="margin-top: 15px;">
+				<li class="mui-table-view-cell mui-media">
+					<a href="javascript:;" id="chat">
+						<span class="mui-icon iconfont icon-xinxi mui-pull-left font-style"
+							style="margin-left: 130px; margin-right: 10px; color: #f0ad4e;"></span>
+						<div class="mui-media-body">
+							发消息
+						</div>
+					</a>
+				</li>
+			</ul>
+
+			<div id="popover" class="mui-popover mui-popover-bottom mui-popover-action">
+				<ul class="mui-table-view">
+					<li class="mui-table-view-cell popover" id="delete"><a href="#">删除好友</a></li>
+				</ul>
+			</div>
+		</section>
+		<script src="../js/mui.js"></script>
+		<script src="../js/app.js"></script>
+		<script type="text/javascript">
+			mui.init();
+			var userId = null;
+			var friendId = null;
+			// 弹出隐藏列表
+			document.getElementById("menu").addEventListener("tap", function() {
+				mui("#popover").popover("toggle");
+			})
+			mui.plusReady(function() {
+				var wv = plus.webview.currentWebview();
+				friendId = wv.friendId;
+				console.log(friendId)
+				var username = wv.username;
+				var nickname = wv.nickname;
+				var faceImage = wv.faceImage;
+				document.getElementById("comment").innerText = nickname;
+				document.getElementById("nickname").innerText = nickname;
+				document.getElementById("lemon-id").innerText = username;
+				document.getElementById("face-image").src = app.imgServerUrl + "/" + faceImage;
+				// 打开聊天页面
+				document.getElementById("chat").addEventListener("tap", function() {
+					var wv = plus.webview.create("chat.html", "chat-" + friendId, {}, {
+						friendId: friendId,
+						username: username,
+						nickname: nickname,
+						faceImage: faceImage,
+					});
+					wv.show("slide-in-right", 300);
+				})
+				// 删除好友
+				document.getElementById("delete").addEventListener("tap", function() {
+					mui.confirm('真的再也不联系了吗?', "删除确认", ['取消', '确认'], function(e) {
+						if (e.index == 1) {
+							userId = app.getUserInfo().id;
+							// 删除
+							mui.ajax(app.serverUrl + "/user/deleteFriend", {
+								data: {
+									userId: userId,
+									friendId: friendId,
+								},
+								dataType: 'json',
+								type: "post",
+								timeout: 10000,
+								headers: {
+									'Content-Type': 'application/json'
+								},
+								beforeSend: function() {
+									plus.nativeUI.showWaiting("删除中请稍后");
+								},
+								complete: function() {
+									plus.nativeUI.closeWaiting();
+								},
+								success: function(data) {
+									console.log("返回的数据: " + JSON.stringify(data));
+									if (data.success) {
+										app.delLocalFriend(userId, friendId);
+										var pre = plus.webview.currentWebview().opener();
+										var userId = app.getUserInfo().id;
+										pre.evalJS("getAllFriends('" + userId +
+											"');showList();")
+										plus.webview.currentWebview().close();
+									} else {
+										app.showToast(data.info, "error");
+									}
+								},
+								error: app.handleError
+							})
+						}
+					}, 'div')
+				})
+			})
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport"
+			content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.css" rel="stylesheet" />
+		<link href="../iconfont/iconfont.css" rel="stylesheet" />
+		<link href="../css/public.css" rel="stylesheet" />
+		<style type="text/css">
+			.mui-input-group div {
+				margin-top: 15px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav title">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left title"></a>
+			<a id="complete" class="mui-icon iconfont icon-tijiao mui-pull-right title"></a>
+			<h1 class="mui-title title">修改昵称</h1>
+		</header>
+
+		<section class="mui-content">
+			<form class="mui-input-group">
+				<div class="mui-input-row">
+					<input type="text" class="mui-input-clear mui-input-speech" placeholder="铁剑库丹" id="nickname">
+				</div>
+			</form>
+		</section>
+
+		<script src="../js/mui.js"></script>
+		<script src="../js/app.js"></script>
+		<script type="text/javascript">
+			mui.init({
+				beforeback: function() {
+					//获得父页面的webview
+					var wv = plus.webview.currentWebview().opener();
+					wv.evalJS ("refreshUserInfo()");
+					//返回true,继续页面关闭逻辑
+					return true;
+				}
+			});
+			mui.plusReady(function() {
+			 	var userInfo = app.getUserInfo();
+				var nickname = document.getElementById("nickname");
+				nickname.focus();
+				nickname.placeholder = userInfo.nickname;
+				document.getElementById("complete").addEventListener("tap", function() {
+					if (app.isNull(nickname.value)) {
+						app.showToast("昵称不能为空", "error");
+					} else {
+						mui.ajax(app.serverUrl + "/user/updateNickname", {
+							data: {
+								username: userInfo.username,
+								nickname: nickname.value
+							},
+							dataType: 'json',
+							type: "post",
+							timeout: 10000,
+							headers: {
+								'Content-Type': 'application/json'
+							},
+							beforeSend: function() {
+								plus.nativeUI.showWaiting("正在努力修改"); 
+							},
+							complete: function() {
+								plus.nativeUI.closeWaiting(); 
+							},
+							success: function(data) {
+								console.log("返回的数据: " + JSON.stringify(data));
+								if (data.success) {
+									app.showToast(data.info, "success");
+									app.setUserInfo(data.data);
+								} else {
+									app.showToast(data.info, "error");
+								}
+							},
+							error: app.handleError
+						})
+					}
+				})
+			})
+			
+		</script>
+	</body>
+
+</html>

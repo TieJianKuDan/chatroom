@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.css" rel="stylesheet" />
+		<link href="../css/public.css" rel="stylesheet" />
+		<style type="text/css">
+			html,
+			body {
+				height: 100%;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav title">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left title"></a>
+			<h1 class="mui-title title">扫一扫</h1>
+		</header>
+		<section class="mui-content">
+			
+		</section>
+		<script src="../js/mui.js"></script>
+		<script src="../js/app.js"></script>
+		<script type="text/javascript">
+			mui.init({
+				beforeback: function() {
+					//获得父页面的webview
+					var list = plus.webview.currentWebview().opener();
+					//触发父页面的自定义事件(refresh),从而进行刷新
+					mui.fire(list, 'refresh');
+					//返回true,继续页面关闭逻辑
+					return true;
+				}
+			});
+			mui.plusReady(function () {
+				userInfo = app.getUserInfo();
+			    createBarcode();
+			})
+			var barcode = null;
+			var userInfo = null;
+			/**
+			 * 扫码成功回调
+			 * @param {Object} type
+			 * @param {Object} result
+			 */
+			function onmarked(type, result) {
+				barcode.close();
+				if (app.isUsernameLegal(result)) {
+					mui.ajax(app.serverUrl + "/user/queryUser?stranger=" + result + "&myId=" + userInfo.id, {
+						dataType: 'json',
+						type: "get",
+						timeout: 10000,
+						beforeSend: function() {
+							plus.nativeUI.showWaiting("查询中请稍后");
+						},
+						complete: function() {
+							plus.nativeUI.closeWaiting();
+						},
+						success: function(data) {
+							console.log("返回的数据: " + JSON.stringify(data));
+							if (data.success) {
+								if (data.info == "陌生人") {
+									mui.openWindow({
+										url: "stranger-info.html",
+										id: "stranger-info",
+										extras: {
+											strangerId: data.data.id,
+											strangerName: data.data.username,
+											faceImage: data.data.faceImage,
+											nickname: data.data.nickname,
+										}
+									})
+								} else if (data.info == "好友") {
+									mui.openWindow({
+										url: "friend-info.html",
+										id: "friend-info",
+										extras: {
+											username: data.data.username,
+											faceImage: data.data.faceImage,
+											nickname: data.data.nickname
+										}
+									})
+								}
+							} else {
+								app.showToast(data.info, "error");
+							}
+						},
+						error: app.handleError
+					})
+				}
+			}
+			/**
+			 * 创建Barcode扫码控件
+			 */
+			function createBarcode() {
+				if(!barcode){
+					barcode = plus.barcode.create('barcode', [plus.barcode.QR], {
+						top:'44px',
+						left:'0px',
+						width: '100%',
+						height: '100%',
+						position: 'static',
+						frameColor: '#f0ad4e',
+						scanbarColor: '#f0ad4e'
+					});
+					barcode.onmarked = onmarked;
+					plus.webview.currentWebview().append(barcode);
+				}
+				barcode.start();
+			}
+		</script>
+	</body>
+
+</html>

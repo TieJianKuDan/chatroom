@@ -1,0 +1,238 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport"
+			content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.css" rel="stylesheet" />
+		<link href="../css/public.css" rel="stylesheet" />
+		<link href="../css/mui.indexedlist.css" rel="stylesheet" />
+		<style type="text/css">
+			html,
+			body {
+				height: 100%;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav title" style="z-index: 99;">
+			<h1 class="mui-title title">通讯录</h1>
+		</header>
+		<div class="mui-content">
+			<div id='list' class="mui-indexed-list">
+				<div class="mui-indexed-list-search mui-input-row mui-search">
+					<input type="search" class="mui-input-clear mui-indexed-list-search-input" placeholder="搜索好友">
+				</div>
+				<div class="mui-indexed-list-bar">
+					<a>A</a>
+					<a>B</a>
+					<a>C</a>
+					<a>D</a>
+					<a>E</a>
+					<a>F</a>
+					<a>G</a>
+					<a>H</a>
+					<a>I</a>
+					<a>J</a>
+					<a>K</a>
+					<a>L</a>
+					<a>M</a>
+					<a>N</a>
+					<a>O</a>
+					<a>P</a>
+					<a>Q</a>
+					<a>R</a>
+					<a>S</a>
+					<a>T</a>
+					<a>U</a>
+					<a>V</a>
+					<a>W</a>
+					<a>X</a>
+					<a>Y</a>
+					<a>Z</a>
+				</div>
+				<div class="mui-indexed-list-alert"></div>
+				<div class="mui-indexed-list-inner">
+					<div class="mui-indexed-list-empty-alert">好友不存在</div>
+					<ul class="mui-table-view" id="friend-list">
+
+					</ul>
+				</div>
+			</div>
+		</div>
+		<script src="../js/mui.js"></script>
+		<script src="../js/mui.indexedlist.js"></script>
+		<script src="../js/app.js"></script>
+		<script src="../js/nickname.js"></script>
+		<script type="text/javascript">
+			mui.init();
+			var userInfo = null;
+			var friendArray = [
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[],
+				[]
+			]
+			mui.plusReady(function() {
+				userInfo = app.getUserInfo();
+				var friends = app.getAllLocalFriends(userInfo.id);
+				getAllFriends(userInfo.id);
+				// if (friends == null) {
+				// 	getAllFriends(userInfo.id);
+				// } else {
+				// 	classifyFriend(friends);
+				// 	renderFriendList();
+				// }
+				showList();
+			})
+			/**
+			 * 从服务器获取所有好友
+			 * @param {Object} userId
+			 */
+			function getAllFriends(userId) {
+				mui.ajax(app.serverUrl + "/user/queryAllFriends?userId=" + userId, {
+					dataType: 'json',
+					type: "get",
+					timeout: 10000,
+					success: function(data) {
+						if (data.success) {
+							app.saveAllFriends(userInfo.id, data.data);
+							classifyFriend(data.data);
+							renderFriendList();
+						} else {
+							app.showToast("刷新好友列表失败", "error");
+						}
+					},
+					error: app.handleError
+				})
+			}
+			/**
+			 * 将好友分类存放
+			 * @param {Object} friends
+			 */
+			function classifyFriend(friends) {
+				for (var i = 0; i < friends.length; i++) {
+					var nickname = friends[i].nickname;
+					var py = words.getPingYinFromWords(nickname).toUpperCase();
+					if (py.charCodeAt(0) >= 65 && py.charCodeAt(0) <= 90) {
+						friendArray[py.charCodeAt(0) - 65].push(friends[i]);
+					} else {
+						friendArray[26].push(friends[i]);
+					}
+				}
+			}
+			/**
+			 * 渲染好友列表的 html
+			 */
+			function renderFriendList() {
+				var friendListHtml = "";
+				for (var i = 0; i < friendArray.length; i++) {
+					if (friendArray[i].length > 0) {
+						friendListHtml += '<li data-group="' + String
+							.fromCharCode(65 + i) + '" class="mui-table-view-divider mui-indexed-list-group">' + String
+							.fromCharCode(65 + i) + '</li>';
+					}
+					for (var j = 0; j < friendArray[i].length; j++) {
+						var friend = friendArray[i][j];
+						friendListHtml += ' <li id = "' + friend.id + '" username = "' + friend.username + '" faceImage = "' +
+							friend.faceImage +
+							'" nickname = "' + friend.nickname +
+							'" class="mui-table-view-cell mui-indexed-list-item friend-info"> ' +
+							' <a href="javascript:;"> ' +
+							'<img class="mui-media-object mui-pull-left" src=" ' + app.imgServerUrl + '/' + friend.faceImage +
+							' "> ' +
+							'<div class="mui-media-body" style = "line-height: 42px;"> ' + friend.nickname + ' </div> ' +
+							' </a> ' +
+							' </li> ';
+					}
+				}
+				document.getElementById("friend-list").innerHTML = friendListHtml;
+				var infos = document.getElementsByClassName("friend-info");
+				for (var i = 0; i < infos.length; i++) {
+					infos[i].addEventListener("tap", function() {
+						var friendId = this.getAttribute("id");
+						var username = this.getAttribute("username");
+						var faceImage = this.getAttribute("faceImage");
+						var nickname = this.getAttribute("nickname");
+						mui.openWindow({
+							url: "friend-info.html",
+							id: "friend-info",
+							extras: {
+								friendId: friendId,
+								username: username,
+								faceImage: faceImage,
+								nickname: nickname
+							}
+						})
+					})
+				}
+				friendArray = [
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[],
+					[]
+				]
+			}
+
+			function showList() {
+				var header = document.querySelector('header.mui-bar');
+				var list = document.getElementById('list');
+				//calc hieght
+				list.style.height = (document.body.offsetHeight - header.offsetHeight) + 'px';
+				//create
+				window.indexedList = new mui.IndexedList(list);
+			}
+		</script>
+	</body>
+
+</html>

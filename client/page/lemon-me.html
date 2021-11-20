@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport"
+			content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.css" rel="stylesheet" />
+		<link href="../iconfont/iconfont.css" rel="stylesheet" />
+		<link href="../css/public.css" rel="stylesheet" />
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav title">
+			<h1 class="mui-title title">我的信息</h1>
+		</header>
+
+		<section class="mui-content">
+			<ul class="mui-table-view">
+				<li class="mui-table-view-cell mui-media">
+					<a href="javascript:;" id="link-myface">
+						<span class="mui-icon iconfont icon-BARISTA mui-pull-left font-style icon-style"></span>
+						<span class="mui-icon mui-icon-arrowright mui-pull-right font-style"></span>
+						<img class="mui-media-object mui-pull-right" src="../picture/lemon.svg" id="face">
+						<div class="mui-media-body font-style">
+							头像
+						</div>
+					</a>
+				</li>
+				<li class="mui-table-view-cell mui-media">
+					<a href="javascript:;" id="link-nickname">
+						<span class="mui-icon iconfont icon-ningmengcha mui-pull-left font-style icon-style"></span>
+						<span class="mui-icon mui-icon-arrowright mui-pull-right font-style"></span>
+						<span class="mui-pull-right font-style" id="nickname">铁剑库丹</span>
+						<div class="mui-media-body font-style">
+							昵称
+						</div>
+					</a>
+				</li>
+				<li class="mui-table-view-cell mui-media">
+					<a href="javascript:;" id="link-lemon-id">
+						<span class="mui-icon iconfont icon-book_ mui-pull-left font-style icon-style"></span>
+						<span class="mui-icon mui-icon-arrowright mui-pull-right font-style"></span>
+						<span class="mui-pull-right font-style" id="lemon-id">孔新新</span>
+						<div class="mui-media-body font-style">
+							柠檬号
+						</div>
+					</a>
+				</li>
+				<li class="mui-table-view-cell mui-media">
+					<a href="javascript:;" id="link-qrcode">
+						<span class="mui-icon iconfont icon-erweima- mui-pull-left font-style icon-style"></span>
+						<span class="mui-icon mui-icon-arrowright mui-pull-right font-style"></span>
+						<div class="mui-media-body font-style">
+							二维码
+						</div>
+					</a>
+				</li>
+			</ul>
+			<ul class="mui-table-view" style="margin-top: 30px; text-align: center;">
+				<li class="mui-table-view-cell mui-media">
+					<a href="javascript:;" id="link-quit">
+						<div class="mui-media-body font-style">
+							退出登录
+						</div>
+					</a>
+				</li>
+			</ul>
+		</section>
+
+		<script src="../js/mui.js"></script>
+		<script src="../js/app.js"></script>
+		<script type="text/javascript">
+			mui.init()
+			mui.plusReady(function() {
+				// 刷新用户信息
+				refreshUserInfo();
+				var currentWebview = plus.webview.currentWebview();
+				currentWebview.addEventListener("show", function() {
+					refreshUserInfo();
+				})
+				currentWebview.addEventListener("refresh", function() {
+					refreshUserInfo();
+				})
+				// 打开头像窗口
+				document.getElementById("link-myface").addEventListener("tap", function() {
+					mui.openWindow({
+						url: "myface.html",
+						id: "myface"
+					});
+				})
+				// 打开修改昵称窗口
+				document.getElementById("link-nickname").addEventListener("tap", function() {
+					mui.openWindow({
+						url: "nickname.html",
+						id: "nickname"
+					})
+				})
+				// 打开查看柠檬号的窗口
+				document.getElementById("link-lemon-id").addEventListener("tap", function() {
+					mui.openWindow({
+						url: "lemon-id.html",
+						id: "lemon-id"
+					})
+				})
+				// 打开查看二维码的窗口
+				document.getElementById("link-qrcode").addEventListener("tap", function() {
+					mui.openWindow({
+						url: "qrcode.html",
+						id: "qrcode"
+					})
+				})
+				// 退出登录
+				document.getElementById("link-quit").addEventListener("tap", function() {
+					app.clearUserInfo();
+					mui.openWindow({
+						url: "login.html",
+						id: "login"
+					})
+				})
+			})
+
+			function refreshUserInfo() {
+				var user = app.getUserInfo();
+				var face = document.getElementById("face");
+				var nickname = document.getElementById("nickname");
+				var lemonId = document.getElementById("lemon-id");
+				if (!app.isNull(user.faceImage)) {
+					face.src = app.imgServerUrl + "/" + user.faceImage;
+				}
+				nickname.innerText = user.nickname;
+				lemonId.innerText = user.username;
+			}
+		</script>
+	</body>
+
+</html>

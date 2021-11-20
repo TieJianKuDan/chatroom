@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport"
+			content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.css" rel="stylesheet" />
+		<link href="../iconfont/iconfont.css" rel="stylesheet" />
+		<link href="../css/public.css" rel="stylesheet" />
+		<style type="text/css">
+			#face {
+				width: 50px;
+				height: 50px;
+				vertical-align: middle;
+			}
+
+			.qrcode {
+				width: 330px;
+				margin: 0 auto;
+				padding: 15px;
+				background-color: white;
+				border: none;
+				box-shadow: 0 12px 5px -10px rgba(0,0,0,0.1), 0 0 4px 0 rgba(0,0,0,0.1);
+				-webkit-box-shadow: 0 12px 5px -10px rgba(0,0,0,0.1), 0 0 4px 0 rgba(0,0,0,0.1);
+				border-radius: 5px;
+			}
+
+			#qrcode-img {
+				margin-top: 15px;
+				margin-bottom: 5px;
+				width: 300px;
+				height: 300px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav title">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left title"></a>
+			<h1 class="mui-title title">我的二维码</h1>
+		</header>
+
+		<section class="lemon-content">
+			<div class="qrcode">
+				<div style="text-align: left;">
+					<img src="../picture/lemon.svg" id="face">
+					<span id="nickname">铁剑库丹</span>
+				</div>
+				<div id="">
+					<img src="../picture/xuhua.jpg" id="qrcode-img">
+				</div>
+				<div>
+					<p>扫一扫上面的二维码添加好友</p>
+				</div>
+			</div>
+		</section>
+
+		<script src="../js/mui.js"></script>
+		<script src="../js/app.js"></script>
+		<script type="text/javascript">
+			mui.init();
+			mui.plusReady(function() {
+				refreshQRCode();
+			})
+			function refreshQRCode() {
+				var userInfo = app.getUserInfo();
+				if (!app.isNull(userInfo.qrcode)) {
+					document.getElementById("qrcode-img").src = app.imgServerUrl + "/" + userInfo.qrcode;
+				}
+				if (!app.isNull(userInfo.faceImage)) {
+					document.getElementById("face").src = app.imgServerUrl + "/" + userInfo.faceImage;
+				}
+				document.getElementById("nickname").innerText = userInfo.nickname;
+			}
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,261 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport"
+			content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.css" rel="stylesheet" />
+		<link href="../css/public.css" rel="stylesheet" />
+		<style type="text/css">
+			.my-cell {
+				padding: 10px;
+			}
+
+			.left {
+				float: left;
+				width: 290px;
+			}
+
+			.left>div {
+				float: left;
+				height: 50px;
+			}
+
+			.right {
+				float: right;
+				margin-top: 15px;
+			}
+
+			img {
+				width: 50px;
+				height: 50px;
+				vertical-align: middle;
+				margin-right: 10px;
+			}
+
+			.name {
+				padding-top: 5px;
+				width: 230px;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+
+			.message {
+				width: 230px;
+				padding-top: 2px;
+				color: gray;
+				font-size: 12px;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav title">
+			<h1 class="mui-title title">柠檬</h1>
+		</header>
+		<section class="mui-content" id="snapshots">
+			<!-- <ul class="mui-table-view">
+				<li class="mui-table-view-cell my-cell">
+					<div class="mui-slider-right mui-disabled">
+						<a class="mui-btn mui-btn-blue">标记未读</a>
+						<a class="mui-btn mui-btn-yellow">不显示</a>
+						<a class="mui-btn mui-btn-red">删除</a>
+					</div>
+					<div class="mui-slider-handle snapshot">
+						<div class="left">
+							<div>
+								<img src="../picture/lemon.svg">
+							</div>
+							<div>
+								<div class="name">张三</div>
+								<div class="message">你好啊！</div>
+							</div>
+						</div>
+						<div class="mui-badge mui-badge-red right">1</div>
+					</div>
+				</li>
+			</ul> -->
+		</section>
+		<button type="button" id="delall">删除所有快照</button>
+		<script src="../js/mui.js"></script>
+		<script src="../js/app.js"></script>
+		<script type="text/javascript">
+			mui.init();
+			var snapshotHtml = "";
+			document.getElementById("delall").addEventListener("tap", function() {
+				app.delAllChatSnapshot(CHAT.userInfo.id);
+			})
+			window.CHAT = {
+				userInfo: null,
+				socket: null,
+				init: function() {
+					this.userInfo = app.getUserInfo();
+					//判断浏览器是否支持websocket
+					if (window.WebSocket) {
+						//创建websocket 对象
+						this.socket = new WebSocket(app.wsServerUrl);
+						this.socket.onopen = this.doOpen;
+						this.socket.close = this.doClose;
+						this.socket.onerror = this.doError;
+						this.socket.onmessage = this.doMessage;
+					} else {
+						console.log("手机不支持websocket?");
+					}
+				},
+				doOpen: function() {
+					console.log("连上websocket服务器了");
+					CHAT.connect();
+				},
+				doClose: function() {
+					console.log("连接关闭");
+				},
+				doError: function() {
+					console.log("发生异常");
+				},
+				doMessage: function(e) {
+					console.log("接受消息：" + e.data);
+					var envelope = JSON.parse(e.data);
+					var chatMsg = envelope.chatMsg;
+					var fromId = chatMsg.senderId;
+					var wv = plus.webview.getWebviewById("chat-" + fromId);
+					app.saveChatMsg(CHAT.userInfo.id, fromId, chatMsg);
+					var snapshot = null;
+					if (wv != null) {
+						wv.evalJS("receive('" + JSON.stringify(chatMsg) + "')");
+						snapshot = new app.ChatSnapshot(fromId, chatMsg, 0);
+						app.saveChatSnapshot(CHAT.userInfo.id, fromId, snapshot);
+					} else {
+						var preShot = app.getChatSnapshot(CHAT.userInfo.id, fromId);
+						if (preShot == null) {
+							snapshot = new app.ChatSnapshot(fromId, chatMsg, 1);
+						} else {
+							snapshot = new app.ChatSnapshot(fromId, chatMsg, preShot.unreadNum + 1);
+						}
+						app.saveChatSnapshot(CHAT.userInfo.id, fromId, snapshot);
+						renderChatSnapshot(CHAT.userInfo.id);
+					}
+				},
+				chat: function(envelopeStr) {
+					CHAT.socket.send(envelopeStr);
+					console.log("发送消息：" + envelopeStr);
+				},
+				connect: function() {
+					var fromId = CHAT.userInfo.id;
+					var toId = "0";
+					var content = "connect and save"
+					var msg = new app.ChatMsg(fromId, toId, content);
+					var envelope = new app.Envelope(1, msg);
+					CHAT.socket.send(JSON.stringify(envelope));
+					console.log("上线并保存连接");
+				}
+			}
+			mui.plusReady(function() {
+				CHAT.init();
+				renderChatSnapshot(CHAT.userInfo.id);
+			})
+			/**
+			 * 渲染聊天快照
+			 */
+			function renderChatSnapshot(userId) {
+				var snapshots = app.getAllChatSnapshot(CHAT.userInfo.id);
+				if (snapshots == null) {
+					return;
+				}
+				for (var [k, v] of snapshots) {
+					var friendInfo = app.getLocalFriend(userId, k);
+					if (friendInfo == null) {
+						// 刷新好友列表
+						var wv = plus.webview.getWebviewById("lemon-contact");
+						wv.evalJS("getAllFriends('" + CHAT.userInfo.id + "');");
+						var content = v.chatMsg.content;
+						var info = content.split(";");
+						friendInfo = {
+							id: info[0],
+							username: info[1],
+							nickname: info[2],
+							faceImage: info[3]
+						}
+						console.log(friendInfo);
+						v.chatMsg.content = "我已经添加你为好友，快来聊天吧！";
+						app.saveChatSnapshot(CHAT.userInfo.id, friendInfo.id, v);
+					}
+					constructSnapshotHtml(friendInfo, v);
+				}
+				document.getElementById("snapshots").innerHTML = snapshotHtml;
+				snapshotHtml = "";
+				// 绑点点击打开聊天页面
+				var snapshots = document.getElementsByClassName("snapshot");
+				for (var snapshot of snapshots) {
+					snapshot.addEventListener("tap", function() {
+						var grandpa = this.parentNode.parentNode;
+						var friendId = grandpa.getAttribute("friendId");
+						var username = grandpa.getAttribute("username");
+						var nickname = grandpa.getAttribute("nickname");
+						var faceImage = grandpa.getAttribute("faceImage");
+						var wv = plus.webview.create("chat.html", "chat-" + friendId, {}, {
+							friendId: friendId,
+							username: username,
+							nickname: nickname,
+							faceImage: faceImage,
+						});
+						wv.show("slide-in-right", 300);
+					})
+				}
+				// 绑定删除聊天快照功能
+				var hBtns = document.getElementsByClassName("mui-btn-yellow");
+				for (var hBtn of hBtns) {
+					hBtn.addEventListener("tap", function() {
+						var grandpa = this.parentNode.parentNode.parentNode;
+						var friendId = grandpa.getAttribute("friendId");
+						var userId = CHAT.userInfo.id;
+						app.delChatSnapshot(userId, friendId);
+						grandpa.style.display = "none";
+					})
+				}
+				// 绑定删除聊天记录功能
+				var dBtns = document.getElementsByClassName("mui-btn-red");
+				for (var dBtn of dBtns) {
+					dBtn.addEventListener("tap", function() {
+						var grandpa = this.parentNode.parentNode.parentNode;
+						var friendId = grandpa.getAttribute("friendId");
+						var userId = CHAT.userInfo.id;
+						app.delChatSnapshot(userId, friendId);
+						app.delChatRecords(userId, friendId);
+						grandpa.style.display = "none";
+					})
+				}
+			}
+			/**
+			 * 构建一条聊天快照的 html
+			 * @param {Object} friendInfo
+			 * @param {Object} snapshot
+			 */
+			function constructSnapshotHtml(friendInfo, snapshot) {
+				console.log(JSON.stringify(snapshot));
+				console.log(JSON.stringify(friendInfo));
+				snapshotHtml += '<ul friendId = "' + friendInfo.id + '" username = "' + friendInfo.username + '" nickname = "' +
+					friendInfo.nickname + '" faceImage = "' + friendInfo.faceImage + '"' +
+					' class="mui-table-view"><li class="mui-table-view-cell my-cell"><div class="mui-slider-right mui-disabled"><a class="mui-btn mui-btn-blue">标记未读</a><a class="mui-btn mui-btn-yellow">不显示</a><a class="mui-btn mui-btn-red">删除</a></div><div class="mui-slider-handle snapshot"><div class="left">' +
+					'<div>' +
+					'<img src="' + app.imgServerUrl + '/' + friendInfo.faceImage + '">' +
+					'</div><div>' +
+					'<div class="name">' + friendInfo.nickname + '</div>' +
+					'<div class="message">' + snapshot.chatMsg.content + '</div>' +
+					'</div></div>'
+				if (snapshot.unreadNum == 0) {
+					snapshotHtml += '</div></li></ul>';
+				} else {
+					snapshotHtml += '<div class="mui-badge mui-badge-red right">' + snapshot.unreadNum +
+						'</div></div></li></ul>'
+				}
+			}
+		</script>
+	</body>
+
+</html>

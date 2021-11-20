@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport"
+			content="height=300,width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<style type="text/css">
+			* {
+				margin: 0;
+				padding: 0;
+			}
+
+			html,
+			body {
+				height: 100%;
+			}
+
+			div:nth-child(2n) {
+				width: auto;
+				background-color: white;
+				color: black;
+			}
+
+			div:nth-child(2n + 1) {
+				width: auto;
+				background-color: black;
+				color: white;
+			}
+		</style>
+	</head>
+
+	<body>
+		from:<input type="text" name="from" id="from" /><br />
+		to:<input type="text" name="to" id="to" /><br />
+		message:<input type="text" name="msg" id="msg" /><br />
+		<button id="send">发送</button><button id="connect">连接</button><br />
+		<div id="history"></div>
+		<script src="../js/app.js" type="text/javascript" charset="utf-8"></script>
+		<script>
+			window.CHAT = {
+				socket: null,
+				init: function() {
+					//判断浏览器是否支持websocket
+					if (window.WebSocket) {
+						//创建websocket 对象
+						this.socket = new WebSocket("ws://192.168.43.15:8000/ws");
+						this.socket.onopen = this.doOpen;
+						this.socket.close = this.doClose;
+						this.socket.onerror = this.doError;
+						this.socket.onmessage = this.doMessage;
+					} else {
+						console.log("手机不支持websocket?");
+					}
+				},
+				doOpen: function() {
+					console.log("连接建立成功");
+				},
+				doClose: function() {
+					console.log("连接关闭");
+				},
+				doError: function() {
+					console.log("发生异常");
+				},
+				doMessage: function(e) {
+					console.log("接受消息：" + e.data);
+					var div = document.createElement("div");
+					var envelope = JSON.parse(e.data);
+					div.innerHTML = envelope.chatMsg.senderId + ": " + envelope.chatMsg.content;
+					document.getElementById("history").appendChild(div)
+				},
+				chat: function() {
+					var fromId = document.getElementById("from").value;
+					var toId = document.getElementById("to").value;
+					var content = document.getElementById("msg").value;
+					var msg = new app.ChatMsg(fromId, toId, content);
+					var envelope = new app.Envelope(2, msg);
+					CHAT.socket.send(JSON.stringify(envelope));
+					console.log("发送消息：" + msg);
+					var div = document.createElement("div");
+					div.innerHTML = envelope.chatMsg.senderId + ": " + envelope.chatMsg.content;
+					document.getElementById("history").appendChild(div)
+				},
+				connect: function() {
+					var fromId = document.getElementById("from").value;
+					var toId = document.getElementById("to").value;
+					var content = document.getElementById("msg").value;
+					var msg = new app.ChatMsg(fromId, toId, content);
+					var envelope = new app.Envelope(1, msg);
+					CHAT.socket.send(JSON.stringify(envelope));
+					console.log("建立连接");
+					alert("建立连接")
+				}
+			}
+			CHAT.init();
+			document.getElementById("connect").addEventListener("click", CHAT.connect);
+			document.getElementById("send").addEventListener("click", CHAT.chat);
+		</script>
+	</body>
+
+</html>

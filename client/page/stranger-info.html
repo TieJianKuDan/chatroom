@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.css" rel="stylesheet" />
+		<link href="../iconfont/iconfont.css" rel="stylesheet" />
+		<link href="../css/public.css" rel="stylesheet" />
+		<style type="text/css">
+			#face-image {
+				width: 80px;
+				height: 80px;
+				max-width: 80px;
+				margin: 10px;
+				border-radius: 8px;
+			}
+		
+			dl {
+				margin-left: 10px;
+			}
+		
+			dd {
+				margin: 0;
+			}
+		</style>
+	</head>
+
+	<body>
+		<!-- 标题栏 -->
+		<header class="mui-bar mui-bar-nav title">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left title"></a>
+			<h1 class="mui-title title">好友信息</h1>
+		</header>
+		
+		<!-- 主体内容 -->
+		<section class="mui-content">
+			<ul class="mui-table-view">
+				<li class="mui-table-view-cell mui-media">
+					<a href="javascript:;">
+						<img id="face-image" class="mui-media-object mui-pull-left" src="../picture/xuhua.jpg">
+						<div class="mui-media-body">
+							<dl class="mui-right">
+								<dt>
+									<h4 id="nickname">铁剑库丹</h4>
+								</dt>
+								<dd>
+									<p>
+										<span>柠檬号：</span>
+										<span id="lemon-id">tiejiankudan</span>
+									</p>
+								</dd>
+							</dl>
+						</div>
+					</a>
+				</li>
+			</ul>
+		
+			<ul class="mui-table-view font-style" style="margin-top: 15px;">
+				<li class="mui-table-view-cell mui-media">
+					<a href="javascript:;" id="add">
+						<span class="mui-icon iconfont icon-tianjiahaoyou mui-pull-left font-style"
+							style="margin-left: 100px; margin-right: 10px; color: #f0ad4e;"></span>
+						<div class="mui-media-body">
+							添加到通讯录
+						</div>
+					</a>
+				</li>
+			</ul>
+		</section>
+		<script src="../js/mui.js"></script>
+		<script src="../js/app.js"></script>
+		<script type="text/javascript">
+			mui.init();
+			mui.plusReady(function() {
+				var wv = plus.webview.currentWebview();
+				var strangerId = wv.strangerId;
+				var strangerName = wv.strangerName;
+				var nickname = wv.nickname;
+				var faceImage = wv.faceImage;
+				document.getElementById("nickname").innerText = nickname;
+				document.getElementById("lemon-id").innerText = strangerName;
+				document.getElementById("face-image").src = app.imgServerUrl + "/" + faceImage;
+				document.getElementById("add").addEventListener("tap", function() {
+					var userId = app.getUserInfo().id;
+					mui.ajax(app.serverUrl + "/user/addFriendRequest", {
+						data: {
+							sendUserId: userId,
+							acceptUserId: strangerId
+						},
+						dataType: 'json',
+						type: "post",
+						timeout: 10000,
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						beforeSend: function() {
+							plus.nativeUI.showWaiting("添加中请稍后");
+						},
+						complete: function() {
+							plus.nativeUI.closeWaiting();
+						},
+						success: function(data) {
+							console.log("返回的数据: " + JSON.stringify(data));
+							if (data.success) {
+								app.showToast(data.info, "success")
+							} else {
+								app.showToast(data.info, "error");
+							}
+						},
+						error: app.handleError
+					})
+				})
+			})
+		</script>
+	</body>
+
+</html>

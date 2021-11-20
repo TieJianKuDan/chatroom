@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<style type="text/css">
+			html,
+			body {
+				height: 100%;
+				overflow: hidden;
+			}
+			div:nth-of-type(2n) {
+				height: 200px;
+				background-color: #000000;
+			}
+			div:nth-of-type(2n + 1) {
+				height: 200px;
+				background-color: white;
+			}
+		</style>
+	</head>
+	<body>
+		<script src="../js/app.js" type="text/javascript" charset="utf-8"></script>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<script type="text/javascript">
+			// function ChatMsg(sendId, receiveId, content) {
+			// 	console.log(this);
+			// 	this.sendId = sendId;
+			// 	this.receiveId = receiveId;
+			// 	this.content = content;
+			// }
+			// var msg = new ChatMsg("001", "002", "hello world");
+			// console.log(msg);
+			// var map = new Map();
+			// map.set("usr1", ["leo", "tom"]);
+			// console.log(map);
+			// console.log(app.map2Json(map));
+			// var json = app.map2Json(map);
+			// console.log(app.json2Map(json));
+			var arr = ["leo", 12, true];
+			for (var ele of arr) {
+				console.log(ele);
+			}
+			var obj = {"name": "leo"};
+			var json = JSON.stringify(obj);
+			var obj2 = {id: "233", info: json};
+			console.log(obj2);
+			json = JSON.stringify(obj2);
+			console.log(json);
+		</script>
+	</body>
+</html>

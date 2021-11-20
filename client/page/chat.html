@@ -1,0 +1,368 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport"
+			content="height=300,width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no"
+			id="viewportMeta" />
+		<link href="../css/mui.css" rel="stylesheet" />
+		<link href="../css/public.css" rel="stylesheet" />
+		<style type="text/css">
+			html,
+			body {
+				height: 100%;
+				overflow: hidden;
+			}
+
+			section {
+				position: absolute;
+				top: 0px;
+				width: 100%;
+				overflow: auto;
+			}
+
+			footer {
+				position: fixed;
+				bottom: 0px;
+				height: auto;
+				width: 100%;
+				padding: 10px 10px 5px 10px;
+				background-color: white;
+				box-shadow: 0 0 1px rgba(0, 0, 0, 1);
+			}
+
+			.footer-left {
+				float: left;
+			}
+
+			.footer-right {
+				position: fixed;
+				bottom: 10px;
+				right: 10px;
+			}
+
+			textarea {
+				margin: 0;
+				padding: 10px;
+				width: 290px;
+				overflow: hidden;
+				resize: none;
+			}
+
+			#send {
+				box-sizing: content-box;
+				height: 21px;
+				padding: 10px;
+			}
+
+			.record-left {
+				padding: 10px 10px 0px 10px;
+			}
+
+			.record-right {
+				padding: 10px 10px 0px 10px;
+			}
+
+			.record-left::after {
+				display: block;
+				content: "";
+				height: 0;
+				clear: both;
+			}
+
+			.record-right::after {
+				display: block;
+				content: "";
+				height: 0;
+				clear: both;
+			}
+
+			.face {
+				width: 40px;
+				height: 40px;
+				vertical-align: middle;
+			}
+
+			.record-left .text {
+				position: relative;
+				max-width: 250px;
+				line-height: 20px;
+				padding: 10px;
+				border-radius: 5px;
+				background-color: white;
+				color: black;
+			}
+
+			.record-right .text {
+				position: relative;
+				max-width: 250px;
+				line-height: 20px;
+				padding: 10px;
+				border-radius: 5px;
+				background-color: #f0ad4e;
+				color: white;
+			}
+
+			.record-left>div {
+				float: left;
+				margin-right: 10px;
+			}
+
+			.record-right>div {
+				float: right;
+				margin-left: 10px;
+			}
+
+			.record-left .tip {
+				position: absolute;
+				left: -11px;
+				top: 15px;
+				width: 0px;
+				height: 0px;
+				border-right: 6px solid white;
+				border-left: 6px solid transparent;
+				border-top: 6px solid transparent;
+				border-bottom: 6px solid transparent;
+			}
+
+			.record-right .tip {
+				position: absolute;
+				right: -11px;
+				top: 15px;
+				width: 0px;
+				height: 0px;
+				border-right: 6px solid transparent;
+				border-left: 6px solid #f0ad4e;
+				border-top: 6px solid transparent;
+				border-bottom: 6px solid transparent;
+			}
+		</style>
+	</head>
+
+	<body>
+		<!-- 标题栏 -->
+		<header class="mui-bar mui-bar-nav title">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left title"></a>
+			<h1 class="mui-title title">
+				<span id="friend">张三</span>
+				(<span id="state">在线</span>)
+			</h1>
+		</header>
+		<!-- 聊天记录 -->
+		<section class="mui-content" id="records">
+			<!-- <div class="record-left">
+				<div>
+					<img src="../picture/lemon.svg" class="face">
+				</div>
+				<div>
+					<div class="text">
+						<div class="tip"></div>
+						<span class="text-content">
+							你好，我是张三。
+						</span>
+					</div>
+				</div>
+			</div>
+			<div class="record-right">
+				<div>
+					<img src="../picture/lemon.svg" class="face">
+				</div>
+				<div>
+					<div class="text">
+						<div class="tip"></div>
+						<span class="text-content">
+							你好，你好！
+						</span>
+					</div>
+				</div>
+			</div> -->
+		</section>
+		<!-- 底部输入栏 -->
+		<footer>
+			<div>
+				<textarea rows="1" style="overflow: hidden; visibility: hidden; position: absolute;"
+					id="shadow"></textarea>
+			</div>
+			<div class="footer-left">
+				<textarea rows="1" id="message"></textarea>
+			</div>
+			<div class="footer-right">
+				<button id="send" type="button" class="mui-btn mui-btn-grey" style="line-height: 20px;"
+					disabled="disabled">
+					发送
+				</button>
+			</div>
+		</footer>
+		<script src="../js/mui.js"></script>
+		<script src="../js/app.js"></script>
+		<script type="text/javascript">
+			mui.init({
+				beforeback: function() {
+					// 重置对应的聊天快照未读数
+					var snapshot = app.getChatSnapshot(userInfo.id, selfWV.friendId);
+					if (snapshot != null) {
+						snapshot.unreadNum = 0;
+						app.saveChatSnapshot(userInfo.id, selfWV.friendId, snapshot);
+					}
+					//获得父页面的webview
+					var wv = plus.webview.getWebviewById("lemon-chatlist");
+					wv.evalJS("renderChatSnapshot('" + userInfo.id + "')");
+					//返回true,继续页面关闭逻辑
+					return true;
+				}
+			});
+			textareaAutoHeight();
+			var secH = window.innerHeight - 70;
+			var userInfo = null;
+			var selfWV = null;
+			var chatList = null;
+			var records = document.getElementById("records");
+			// var header = document.getElementsByTagName("header")[0];
+			records.style.maxHeight = secH + "px";
+			mui.plusReady(function() {
+				userInfo = app.getUserInfo();
+				selfWV = plus.webview.currentWebview();
+				chatList = plus.webview.getWebviewById("lemon-chatlist");
+				document.getElementById("friend").innerText = selfWV.nickname;
+				if (plus.os.name == "iOS") {
+					document.getElementById("message").addEventListener("focus", function() {
+						records.style.top = 310 + "px";
+						// header.style.top = 344 + "px";
+						records.style.maxHeight = secH - 310 + "px";
+						records.scrollTo(0, records.scrollHeight);
+					})
+					document.getElementById("message").addEventListener("blur", function() {
+						records.style.top = 0 + "px";
+						header.style.top = 0 + "px";
+						records.style.maxHeight = secH + "px";
+					})
+				} else {
+					document.getElementById("message").addEventListener("focus", function() {
+						records.scrollTo(0, records.scrollHeight);
+					})
+				}
+				document.getElementById("send").addEventListener("tap", send);
+				renderChatRecord();
+				records.scrollTo(0, records.scrollHeight);
+			})
+			/**
+			 * 文本域自适应高度
+			 */
+			function textareaAutoHeight() {
+				var shaodw = document.getElementById("shadow");
+				var message = document.getElementById("message");
+				shaodw.style.width = window.innerWidth - 80 + "px";
+				message.style.width = shaodw.style.width;
+				message.addEventListener("input", function() {
+					shaodw.value = message.value;
+					if (shaodw.scrollHeight > 145) {
+						message.style.overflow = "auto";
+					} else {
+						message.style.height = shaodw.scrollHeight + 2 + "px";
+					}
+					var send = document.getElementById("send");
+					if (!app.isNull(message.value)) {
+						send.removeAttribute("disabled");
+						send.setAttribute("class", "mui-btn mui-btn-warning");
+					} else {
+						send.setAttribute("disabled", "disabled");
+						send.setAttribute("class", "mui-btn mui-btn-grey");
+					}
+				})
+			}
+			/**
+			 * 点击发送消息并记录
+			 */
+			function send() {
+				this.setAttribute("disabled", "disabled");
+				this.setAttribute("class", "mui-btn mui-btn-grey");
+				var message = document.getElementById("message");
+				var chatMsg = new app.ChatMsg(userInfo.id, selfWV.friendId, message.value);
+				var envelope = new app.Envelope(2, chatMsg);
+				var envelopeStr = JSON.stringify(envelope);
+				chatList.evalJS("CHAT.chat('" + envelopeStr + "')");
+				// 保存聊天记录到本地
+				app.saveChatMsg(userInfo.id, selfWV.friendId, chatMsg);
+				var snapshot = new app.ChatSnapshot(userInfo.id, chatMsg, 0);
+				app.saveChatSnapshot(userInfo.id, selfWV.friendId, snapshot);
+				renderMyMsg(message.value);
+				message.value = "";
+				message.style.height = 43 + "px";
+				message.focus();
+				records.scrollTo(0, records.scrollHeight);
+			}
+			/**
+			 * 接收消息并将它显示
+			 * @param {Object} chatMsgStr
+			 */
+			function receive(chatMsgStr) {
+				var chatMsg = JSON.parse(chatMsgStr);
+				var content = chatMsg.content;
+				renderFriendMsg(content);
+				records.scrollTo(0, records.scrollHeight);
+			}
+			/**
+			 * 渲染我的消息到页面
+			 * @param {Object} msg
+			 */
+			function renderMyMsg(msg) {
+				var recordHtml = "";
+				recordHtml = '<div>' +
+					'<img src="' + app.imgServerUrl + '/' + userInfo.faceImage + '" class="face">' +
+					'</div>' +
+					'<div>' +
+					'<div class="text">' +
+					'<div class="tip"></div>' +
+					'<span class="text-content">' +
+					msg +
+					'</span>' +
+					'</div>' +
+					'</div>'
+				var child = document.createElement("div");
+				child.setAttribute("class", "record-right");
+				child.innerHTML = recordHtml;
+				records.appendChild(child);
+			}
+			/**
+			 * 渲染朋友的消息到页面
+			 * @param {Object} msg
+			 */
+			function renderFriendMsg(msg) {
+				var recordHtml = "";
+				recordHtml = '<div>' +
+					'<img src="' + app.imgServerUrl + '/' + selfWV.faceImage + '" class="face">' +
+					'</div>' +
+					'<div>' +
+					'<div class="text">' +
+					'<div class="tip"></div>' +
+					'<span class="text-content">' +
+					msg +
+					'</span>' +
+					'</div>' +
+					'</div>'
+				var child = document.createElement("div");
+				child.setAttribute("class", "record-left");
+				child.innerHTML = recordHtml;
+				records.appendChild(child);
+			}
+			/**
+			 * 渲染聊天记录至页面
+			 */
+			function renderChatRecord() {
+				var chatMsgs = app.getChatRecords(userInfo.id, selfWV.friendId);
+				if (chatMsgs == null) {
+					return;
+				}
+				for (var i = 0; i < chatMsgs.length; i++) {
+					if (chatMsgs[i].senderId == userInfo.id) {
+						renderMyMsg(chatMsgs[i].content);
+					} else {
+						renderFriendMsg(chatMsgs[i].content);
+					}
+				}
+			}
+		</script>
+	</body>
+</html>

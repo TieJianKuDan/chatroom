@@ -23,5 +23,15 @@ hs_err_pid*
 .project
 .settings
 target
+tmp
 .idea
 *.iml
+
+# picture
+*.png
+*.PNG
+*.jpg
+*.jpeg
+*.svg
+!bg1.png
+!bg2.png

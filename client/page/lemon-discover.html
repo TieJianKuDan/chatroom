@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport"
+			content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.css" rel="stylesheet" />
+		<link href="../iconfont/iconfont.css" rel="stylesheet" />
+		<link href="../css/public.css" rel="stylesheet" />
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav title">
+			<h1 class="mui-title title">发现</h1>
+		</header>
+		<section class="mui-content">
+			<ul class="mui-table-view">
+				<li class="mui-table-view-cell mui-media">
+					<a href="javascript:;" id="link-myface">
+						<span class="mui-icon iconfont icon-dongtai mui-pull-left font-style icon-style"></span>
+						<span class="mui-icon mui-icon-arrowright mui-pull-right font-style"></span>
+						<div class="mui-media-body font-style">
+							朋友圈
+						</div>
+					</a>
+				</li>
+			</ul>
+			<ul class="mui-table-view" style="margin-top: 15px;">
+				<li class="mui-table-view-cell mui-media">
+					<a href="javascript:;" id="scan-qrcode">
+						<span class="mui-icon iconfont icon-saoyisao mui-pull-left font-style icon-style"></span>
+						<span class="mui-icon mui-icon-arrowright mui-pull-right font-style"></span>
+						<div class="mui-media-body font-style">
+							扫一扫
+						</div>
+					</a>
+				</li>
+				<li class="mui-table-view-cell mui-media">
+					<a href="javascript:;" id="add-friend">
+						<span class="mui-icon iconfont icon-tianjiahaoyou mui-pull-left font-style icon-style"></span>
+						<span class="mui-icon mui-icon-arrowright mui-pull-right font-style"></span>
+						<div class="mui-media-body font-style">
+							添加好友
+						</div>
+					</a>
+				</li>
+				<li class="mui-table-view-cell mui-media">
+					<a href="javascript:;" id="friend-request">
+						<span class="mui-icon iconfont icon-hello1 mui-pull-left font-style icon-style"></span>
+						<span class="mui-badge mui-badge-red" id="request-num" style="visibility: hidden; margin-right: 25px;"></span>
+						<span class="mui-icon mui-icon-arrowright mui-pull-right font-style"></span>
+						<div class="mui-media-body font-style">
+							好友申请
+						</div>
+					</a>
+				</li>
+			</ul>
+			<script src="../js/mui.js"></script>
+			<script src="../js/app.js"></script>
+			<script type="text/javascript">
+				mui.init();
+				var friendRequest = [];
+				mui.plusReady(function() {
+					var userInfo = app.getUserInfo();
+					var currentWebview = plus.webview.currentWebview();
+					// 查询是否有好友申请
+					currentWebview.addEventListener("show", function() {
+						refreshRequest(userInfo.id);
+					})
+					// 查看好友申请
+					document.getElementById("friend-request").addEventListener("tap", function() {
+						mui.openWindow({
+							url: "friend-request.html",
+							id: "friend-request",
+							extras: {
+								friendRequest: friendRequest
+							}
+						})
+					})
+					// 添加好友
+					document.getElementById("add-friend").addEventListener("tap", function() {
+						mui.openWindow({
+							url: "search-friend.html",
+							id: "search-friend"
+						})
+					})
+					// 扫一扫
+					document.getElementById("scan-qrcode").addEventListener("tap", function() {
+						mui.openWindow({
+							url: "scan-qrcode.html",
+							id: "scan-qrcode"
+						})
+					})
+				})
+				/**
+				 * @param {Object} friendRequest
+				 */
+				function refreshRequest(userId) {
+					// 查询是否有好友申请
+					mui.ajax(app.serverUrl + "/user/getAllFriendRequest?userId=" + userId, {
+						dataType: 'json',
+						type: "get",
+						timeout: 10000,
+						success: function(data) {
+							console.log("返回的数据: " + JSON.stringify(data));
+							if (data.success) {
+								friendRequest = data.data;
+								var requestNum = document.getElementById("request-num");
+								if (friendRequest.length > 0) {
+									requestNum.innerText = "" + friendRequest.length;
+									requestNum.style.visibility = "visible";
+								} else {
+									requestNum.style.visibility = "hidden";
+								}
+							} else {
+								app.showToast(data.info, "error");
+							}
+						},
+						error: app.handleError
+					});
+				}
+			</script>
+	</body>
+
+</html>

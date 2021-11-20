@@ -1,0 +1,205 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport"
+			content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.css" rel="stylesheet" />
+		<link href="../iconfont/iconfont.css" rel="stylesheet" />
+		<link href="../css/public.css" rel="stylesheet" />
+		<link href="../css/cropper.min.css" rel="stylesheet" />
+		<style type="text/css">
+			.mui-table-view-cell {
+				color: #f0ad4e;
+				background-color: white;
+			}
+
+			.cropper-view-box,
+			.cropper-face {
+				border-radius: 50%;
+			}
+		</style>
+	</head>
+
+	<body style="background-color: white;">
+		<!-- 标题 -->
+		<header class="mui-bar mui-bar-nav title">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left title"></a>
+			<a id="menu" class="mui-icon iconfont icon-hanbaocaidan mui-pull-right title"></a>
+			<h1 class="mui-title title">我的头像</h1>
+		</header>
+
+		<!-- 主体 -->
+		<section class="mui-content" style="background-color: white;">
+			<div id="" class="container">
+				<img id="face" src="../picture/xuhua.jpg" />
+			</div>
+			<div id="popover" class="mui-popover mui-popover-bottom mui-popover-action">
+				<ul class="mui-table-view">
+					<li class="mui-table-view-cell" id="choice"><a href="#">更改头像</a></li>
+					<li class="mui-table-view-cell" id="upload"><a href="#">上传头像</a></li>
+				</ul>
+				<ul class="mui-table-view">
+					<li class="mui-table-view-cell" id="save"><a href="#">保存头像</a></li>
+				</ul>
+			</div>
+		</section>
+		<script src="../js/mui.js"></script>
+		<script src="../js/app.js"></script>
+		<script src="../js/cropper.min.js"></script>
+		<script type="text/javascript">
+			mui.init({
+				beforeback: function() {
+					//获得父页面的webview
+					var wv = plus.webview.currentWebview().opener();
+					wv.evalJS ("refreshUserInfo()");
+					//返回true,继续页面关闭逻辑
+					return true;
+				}
+			});
+			// 新建 cropper
+			var croppable = false;
+			var cropper = null;
+			// 弹出隐藏列表
+			document.getElementById("menu").addEventListener("tap", function() {
+				mui("#popover").popover("toggle");
+			})
+			mui.plusReady(function() {
+				var face = document.getElementById("face");
+				face.style.width = window.innerWidth + "px";
+				// 刷新头像
+				refreshFace();
+				// 绑定各个触摸时间
+				document.getElementById("choice").addEventListener("tap", function() {
+					mui("#popover").popover("toggle");
+					pickPicture();
+				})
+				document.getElementById("upload").addEventListener("tap", function() {
+					console.log("croppable: " + croppable);
+					if (croppable) {
+						var croppedCanvas = cropper.getCroppedCanvas();
+						var roundedCanvas = getRoundedCanvas(croppedCanvas);
+						uploadPortrait(roundedCanvas.toDataURL());
+					} else {
+						app.showToast("请先选择新的头像", "error");
+					}
+				})
+				document.getElementById("save").addEventListener("tap", function() {
+					plus.nativeUI.showWaiting("下载中...");
+					var userInfo = app.getUserInfo();
+					var dtask = plus.downloader.createDownload(
+						app.imgServerUrl + "/" + userInfo.faceImageBig, {},
+						function(d, status) {
+							// 下载完成
+							if (status == 200) {
+								plus.nativeUI.closeWaiting();
+								console.log("Download success: " + d.filename);
+								app.showToast("成功保存到 " + d.filename, "success");
+							} else {
+								console.log("Download failed: " + status);
+								app.showToast("保存失败", "error");
+							}
+						});
+					dtask.start();
+				})
+
+			})
+			/**
+			 * 刷新头像信息
+			 */
+			function refreshFace() {
+				var userInfo = app.getUserInfo();
+				var faceImage = userInfo.faceImageBig;
+				if (!app.isNull(faceImage)) {
+					var faceUrl = app.imgServerUrl + "/" + faceImage;
+					document.getElementById("face").src = faceUrl;
+				}
+			}
+			/**
+			 * 选择头像
+			 */
+			function pickPicture() {
+				console.log("从相册中选择图片:");
+				plus.gallery.pick(pickSuccess,
+					function(e) {
+						console.log("取消选择图片");
+					}, {
+						filter: "image"
+					});
+			}
+			/**
+			 * 选择成功的回调
+			 * @param {Object} path
+			 */
+			function pickSuccess(path) {
+				console.log(path);
+				face.src = path;
+				cropper = new Cropper(face, {
+					aspectRatio: 1,
+					viewMode: 3,
+					ready: function() {
+						croppable = true;
+					}
+				});
+			}
+			/**
+			 * 产生圆形头像
+			 * @param {Object} sourceCanvasc
+			 */
+			function getRoundedCanvas(sourceCanvas) {
+				var canvas = document.createElement('canvas');
+				var context = canvas.getContext('2d');
+				var width = sourceCanvas.width;
+				var height = sourceCanvas.height;
+
+				canvas.width = width;
+				canvas.height = height;
+				context.imageSmoothingEnabled = true;
+				context.drawImage(sourceCanvas, 0, 0, width, height);
+				context.globalCompositeOperation = 'destination-in';
+				context.beginPath();
+				context.arc(width / 2, height / 2, Math.min(width, height) / 2, 0, 2 * Math.PI, true);
+				context.fill();
+				return canvas;
+			}
+			/**
+			 * 上传头像
+			 * @param {Object} String image
+			 */
+			function uploadPortrait(image) {
+				var userInfo = app.getUserInfo();
+				mui.ajax(app.serverUrl + "/user/uploadPortrait", {
+					data: {
+						username: userInfo.username,
+						base64Image: image
+					},
+					dataType: 'json',
+					type: "post",
+					timeout: 10000,
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					beforeSend: function() {
+						plus.nativeUI.showWaiting("努力上传中");
+					},
+					complete: function() {
+						plus.nativeUI.closeWaiting();
+					},
+					success: function(data) {
+						console.log("返回的数据: " + JSON.stringify(data));
+						if (data.success) {
+							app.showToast("上传成功", "success");
+							app.setUserInfo(data.data);
+						} else {
+							app.showToast(data.info, "error");
+						}
+					},
+					error: app.handleError
+				})
+			}
+		</script>
+	</body>
+
+</html>

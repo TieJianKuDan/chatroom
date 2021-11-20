@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property name="pattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %c [%thread] %-5level %msg%n"></property>
+    <property name="log_dir" value="D:/log"></property>
+
+    <!--输出到控制台-->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.out</target>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${pattern}</pattern>
+        </encoder>
+    </appender>
+
+    <!--输出到文件-->
+    <appender name="file" class="ch.qos.logback.core.FileAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${pattern}</pattern>
+        </encoder>
+        <file>${log_dir}/logback.log</file>
+    </appender>
+
+    <!--<root level="debug">-->
+        <!--<appender-ref ref="console"/>-->
+    <!--</root>-->
+
+    <logger name="io.netty.handler" level="trace" additivity="false">
+        <appender-ref ref="console"/>
+    </logger>
+
+    <logger name="net.lemonplan" level="trace" additivity="false">
+        <appender-ref ref="console"/>
+    </logger>
+</configuration>
