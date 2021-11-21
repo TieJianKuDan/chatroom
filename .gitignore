@@ -35,3 +35,7 @@ tmp
 *.svg
 !bg1.png
 !bg2.png
+!xuhua.jpg
+!success.png
+!error.png
+!lemon.svg
