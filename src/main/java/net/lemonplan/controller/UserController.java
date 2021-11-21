@@ -104,6 +104,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/queryAllFriends")
+    @CrossOrigin
     public Result<List<User>> queryAllFriends(String userId) {
         List<User> users = userService.queryAllFriends(userId);
         if (users != null) {
@@ -114,7 +115,7 @@ public class UserController {
     }
 
     /**
-     * 根据 id 查询好友信息
+     * 根据 id 查询用户信息
      * @param friendId
      * @return
      */

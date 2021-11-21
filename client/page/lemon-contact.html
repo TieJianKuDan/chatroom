@@ -102,37 +102,8 @@
 			]
 			mui.plusReady(function() {
 				userInfo = app.getUserInfo();
-				var friends = app.getAllLocalFriends(userInfo.id);
-				getAllFriends(userInfo.id);
-				// if (friends == null) {
-				// 	getAllFriends(userInfo.id);
-				// } else {
-				// 	classifyFriend(friends);
-				// 	renderFriendList();
-				// }
-				showList();
+				refreshLoalFriend(userInfo.id);
 			})
-			/**
-			 * 从服务器获取所有好友
-			 * @param {Object} userId
-			 */
-			function getAllFriends(userId) {
-				mui.ajax(app.serverUrl + "/user/queryAllFriends?userId=" + userId, {
-					dataType: 'json',
-					type: "get",
-					timeout: 10000,
-					success: function(data) {
-						if (data.success) {
-							app.saveAllFriends(userInfo.id, data.data);
-							classifyFriend(data.data);
-							renderFriendList();
-						} else {
-							app.showToast("刷新好友列表失败", "error");
-						}
-					},
-					error: app.handleError
-				})
-			}
 			/**
 			 * 将好友分类存放
 			 * @param {Object} friends
@@ -182,8 +153,8 @@
 						var faceImage = this.getAttribute("faceImage");
 						var nickname = this.getAttribute("nickname");
 						mui.openWindow({
-							url: "friend-info.html",
-							id: "friend-info",
+							url: "contact-info.html",
+							id: "contact-info",
 							extras: {
 								friendId: friendId,
 								username: username,
@@ -223,13 +194,46 @@
 					[]
 				]
 			}
-
+			/**
+			 * 从服务器获取所有好友并渲染
+			 * @param {Object} userId
+			 */
+			function refreshAllFriends(userId) {
+				mui.ajax(app.serverUrl + "/user/queryAllFriends?userId=" + userId, {
+					dataType: 'json',
+					type: "get",
+					timeout: 10000,
+					success: function(data) {
+						if (data.success) {
+							app.saveAllFriends(userInfo.id, data.data);
+							classifyFriend(data.data);
+							renderFriendList();
+							showList();
+						} else {
+							app.showToast("刷新好友列表失败", "error");
+						}
+					},
+					error: app.handleError
+				})
+			}
+			/**
+			 * 刷新本地已经保存的朋友
+			 */
+			function refreshLoalFriend(userId) {
+				var friends = app.getAllLocalFriends(userId);
+				if (friends != null) {
+					classifyFriend(friends);
+					renderFriendList();
+					showList();
+				}
+			}
+			/**
+			 * 渲染通讯录
+			 */
 			function showList() {
 				var header = document.querySelector('header.mui-bar');
 				var list = document.getElementById('list');
-				//calc hieght
 				list.style.height = (document.body.offsetHeight - header.offsetHeight) + 'px';
-				//create
 				window.indexedList = new mui.IndexedList(list);
 			}
 		</script>

@@ -130,15 +130,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean deleteFriend(Friend friend) {
-        int count = friendMapper.deleteFriendRelation(friend);
-        if (count == 0) {
-            return false;
-        }
+        friendMapper.deleteFriendRelation(friend);
         Friend _friend = new Friend();
         _friend.setUserId(friend.getFriendId());
         _friend.setFriendId(friend.getUserId());
-        count = friendMapper.deleteFriendRelation(_friend);
-        return count > 0;
+        friendMapper.deleteFriendRelation(_friend);
+        return true;
     }
 
     @Override

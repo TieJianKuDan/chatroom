@@ -30,7 +30,16 @@ window.app = {
 		var userInfoStr = JSON.stringify(userInfo);
 		plus.storage.setItem("userInfo", userInfoStr);
 	},
-
+	syncAjax: function(url) {
+		var result = null;
+		var xhr = new XMLHttpRequest();
+		xhr.addEventListener("load", function() {
+			result = this.responseText;
+		});
+		xhr.open("GET", url, false);
+		xhr.send()
+		return result;
+	},
 	/**
 	 * 清除用户信息
 	 */
@@ -296,6 +305,8 @@ window.app = {
 		var map = app.json2Map(friendsStr);
 		map.delete(friendId);
 		plus.storage.setItem("friendsInfo-" + userId, app.map2Json(map));
+		app.delChatSnapshot(userId, friendId);
+		app.delChatRecords(userId, friendId);
 	},
 	delAllChatSnapshot: function(userId) {
 		plus.storage.removeItem("chatSnapshot-" + userId)

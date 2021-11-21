@@ -182,14 +182,10 @@
 							success: function(data) {
 								if (data.success) {
 									var wv = plus.webview.getWebviewById("lemon-contact");
-									wv.evalJS("getAllFriends('" + userInfo.id + "')");
+									wv.evalJS("refreshAllFriends('" + userInfo.id + "')");
 									wv = plus.webview.getWebviewById("lemon-chatlist");
-									var content = userInfo.id + ";" +
-										userInfo.username + ";" +
-										userInfo.nickname + ";" +
-										userInfo.faceImage;
-									var chatMsg = new app.ChatMsg(userInfo.id, friendId,
-										content);
+									var content = "我们是好友了，快来聊天吧！";
+									var chatMsg = new app.ChatMsg(userInfo.id, friendId,content);
 									var envelope = new app.Envelope(2, chatMsg);
 									wv.evalJS("CHAT.chat('" + JSON.stringify(envelope) + "')");
 								} else {

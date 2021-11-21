@@ -104,7 +104,6 @@
 						type: "get",
 						timeout: 10000,
 						success: function(data) {
-							console.log("返回的数据: " + JSON.stringify(data));
 							if (data.success) {
 								friendRequest = data.data;
 								var requestNum = document.getElementById("request-num");

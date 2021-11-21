@@ -45,16 +45,19 @@
 			// console.log(app.map2Json(map));
 			// var json = app.map2Json(map);
 			// console.log(app.json2Map(json));
-			var arr = ["leo", 12, true];
-			for (var ele of arr) {
-				console.log(ele);
-			}
-			var obj = {"name": "leo"};
-			var json = JSON.stringify(obj);
-			var obj2 = {id: "233", info: json};
-			console.log(obj2);
-			json = JSON.stringify(obj2);
-			console.log(json);
+			// var arr = ["leo", 12, true];
+			// for (var ele of arr) {
+			// 	console.log(ele);
+			// }
+			// var obj = {"name": "leo"};
+			// var json = JSON.stringify(obj);
+			// var obj2 = {id: "233", info: json};
+			// console.log(obj2);
+			// json = JSON.stringify(obj2);
+			// console.log(json);
+			var result = app.syncAjax(app.serverUrl + "/user/queryAllFriends?userId=" + "ec34d187-08f8-44ca-ad93-893aa7340d74")
+			console.log(result);
+			console.log(11222);
 		</script>
 	</body>
 </html>

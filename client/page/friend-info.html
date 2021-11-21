@@ -121,7 +121,7 @@
 			mui.plusReady(function() {
 				var wv = plus.webview.currentWebview();
 				friendId = wv.friendId;
-				console.log(friendId)
+				userId = app.getUserInfo().id;
 				var username = wv.username;
 				var nickname = wv.nickname;
 				var faceImage = wv.faceImage;
@@ -143,7 +143,6 @@
 				document.getElementById("delete").addEventListener("tap", function() {
 					mui.confirm('真的再也不联系了吗?', "删除确认", ['取消', '确认'], function(e) {
 						if (e.index == 1) {
-							userId = app.getUserInfo().id;
 							// 删除
 							mui.ajax(app.serverUrl + "/user/deleteFriend", {
 								data: {
@@ -163,14 +162,11 @@
 									plus.nativeUI.closeWaiting();
 								},
 								success: function(data) {
-									console.log("返回的数据: " + JSON.stringify(data));
 									if (data.success) {
 										app.delLocalFriend(userId, friendId);
-										var pre = plus.webview.currentWebview().opener();
-										var userId = app.getUserInfo().id;
-										pre.evalJS("getAllFriends('" + userId +
-											"');showList();")
-										plus.webview.currentWebview().close();
+										var pre = plus.webview.getWebviewById("lemon-contact");
+										pre.evalJS("refreshAllFriends('" + userId + "')")
+										plus.webview.currentWebview().opener().close();
 									} else {
 										app.showToast(data.info, "error");
 									}
