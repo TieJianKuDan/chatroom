@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport"
+			content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.css" rel="stylesheet" />
+	</head>
+
+	<body>
+		<script src="../js/mui.js"></script>
+		<script src="../js/app.js"></script>
+		<script type="text/javascript">
+			mui.init()
+			var subPages = [{
+					pageId: "friend-info",
+					pageUrl: "friend-info.html"
+				},
+				{
+					pageId: "stranger-info",
+					pageUrl: "stranger-info.html"
+				}
+			]
+			var currentWV = null;
+			var friendId = null;
+			var username = null;
+			var faceImage = null;
+			var nickname = null;
+			var userInfo = null;
+			mui.plusReady(function() {
+				currentWV = plus.webview.currentWebview();
+				friendId = currentWV.friendId,
+				username = currentWV.username,
+				faceImage = currentWV.faceImage,
+				nickname = currentWV.nickname
+				userInfo = app.getUserInfo();
+				for (var ele of subPages) {
+					var subWV = plus.webview.create(ele.pageUrl, ele.pageId, {}, {
+						friendId: friendId,
+						username: username,
+						faceImage: faceImage,
+						nickname: nickname
+					});
+					currentWV.append(subWV);
+					subWV.hide();
+				}
+				mui.ajax(app.serverUrl + "/user/queryUser?stranger=" + username + "&myId=" + userInfo.id, {
+					dataType: 'json',
+					type: "get",
+					timeout: 10000,
+					success: function(data) {
+						if (data.success) {
+							if (data.info == "好友") {
+								plus.webview.getWebviewById(subPages[0].pageId).show();
+							} else if (data.info == "陌生人") {
+								plus.webview.getWebviewById(subPages[1].pageId).show();
+								app.showToast("好友已将您删除", "error");
+								app.delLocalFriend(userInfo.id, friendId);
+								var pre = plus.webview.getWebviewById("lemon-contact");
+								pre.evalJS("refreshAllFriends('" + userInfo.id + "')")
+							}
+						} else {
+							app.showToast(data.info, "error");
+						}
+					},
+					error: app.handleError
+				})
+			})
+		</script>
+	</body>
+
+</html>
